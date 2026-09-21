@@ -21,8 +21,18 @@ const initialForm: FormData = {
 };
 
 export default function FabCodeManager() {
-  const { fabCodes, addFabCode, updateFabCode, removeFabCode } =
-    useFabCodeStore();
+  const {
+    fabCodes,
+    addFabCode,
+    updateFabCode,
+    removeFabCode,
+
+    monthlyReport,
+    showMonthlyReport,
+    generateMonthlyReport,
+    hideMonthlyReport,
+    clearAllData,
+  } = useFabCodeStore();
 
   const [form, setForm] = useState<FormData>(initialForm);
 
@@ -37,12 +47,14 @@ export default function FabCodeManager() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
+    // Do NOT hide monthly report here.
+    // Typing in the form will keep the report open.
+
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === "name" ? value.toUpperCase() : value,
     }));
 
-    // Remove error for this field
     setErrors((prev) => ({
       ...prev,
       [name]: undefined,
@@ -94,15 +106,17 @@ export default function FabCodeManager() {
       yards: Number(form.yards),
     };
 
-    // Edit
     if (editingId) {
+      // Update existing data
       updateFabCode(editingId, data);
-    }
-
-    // Create
-    else {
+    } else {
+      // Add new data
       addFabCode(data);
     }
+
+    // Close monthly report after
+    // successful Add / Update
+    hideMonthlyReport();
 
     resetForm();
   };
@@ -112,6 +126,10 @@ export default function FabCodeManager() {
   // --------------------------------
 
   const handleEdit = (fabCode: FabCode) => {
+    // Close monthly report
+    // immediately when Edit is clicked
+    hideMonthlyReport();
+
     setEditingId(fabCode.id);
 
     setForm({
@@ -143,7 +161,9 @@ export default function FabCodeManager() {
 
     removeFabCode(id);
 
-    // If currently editing this record
+    // Close monthly report after delete
+    hideMonthlyReport();
+
     if (editingId === id) {
       resetForm();
     }
@@ -159,8 +179,33 @@ export default function FabCodeManager() {
     setEditingId(null);
   };
 
+  // --------------------------------
+  // Generate monthly report
+  // --------------------------------
+
+  const handleGenerateMonthlyReport = () => {
+    generateMonthlyReport();
+  };
+  const handleClearAllData = () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to clear ALL FAB code data?\n\nThis action cannot be undone.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    clearAllData();
+
+    // Also reset the form
+    resetForm();
+  };
   return (
     <div className="w-full max-w-6xl mx-auto p-4 sm:p-6">
+      {/* ============================
+          FORM
+      ============================ */}
+
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 sm:p-6">
         <div className="mb-6">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
@@ -175,7 +220,9 @@ export default function FabCodeManager() {
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Inputs */}
+          {/* ============================
+              INPUTS
+          ============================ */}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Name */}
@@ -185,7 +232,7 @@ export default function FabCodeManager() {
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Name
+                Name <span className="text-red-500">*</span>
               </label>
 
               <input
@@ -216,7 +263,7 @@ export default function FabCodeManager() {
                 htmlFor="defects"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Defects
+                Defects <span className="text-red-500">*</span>
               </label>
 
               <input
@@ -227,6 +274,11 @@ export default function FabCodeManager() {
                 value={form.defects}
                 onChange={handleChange}
                 placeholder="Enter defects"
+                onKeyDown={(e) => {
+                  if (["-", ".", "e", "E", "+"].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
                 className={`w-full rounded-lg border px-3 py-2.5
                   outline-none transition
                   ${
@@ -248,7 +300,7 @@ export default function FabCodeManager() {
                 htmlFor="yards"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Yards
+                Yards <span className="text-red-500">*</span>
               </label>
 
               <input
@@ -260,6 +312,11 @@ export default function FabCodeManager() {
                 value={form.yards}
                 onChange={handleChange}
                 placeholder="Enter yards"
+                onKeyDown={(e) => {
+                  if (["-", "e", "E", "+"].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
                 className={`w-full rounded-lg border px-3 py-2.5
                   outline-none transition
                   ${
@@ -275,7 +332,9 @@ export default function FabCodeManager() {
             </div>
           </div>
 
-          {/* Buttons */}
+          {/* ============================
+              FORM BUTTONS
+          ============================ */}
 
           <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6">
             {editingId && (
@@ -307,14 +366,12 @@ export default function FabCodeManager() {
       </div>
 
       {/* ============================
-          TABLE
+          FAB CODE TABLE
       ============================ */}
 
       <div className="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        {/* Table header */}
-
         <div className="p-4 sm:p-6 border-b border-gray-200">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold text-gray-800">FAB Codes</h2>
 
@@ -322,14 +379,41 @@ export default function FabCodeManager() {
                 Total records: {fabCodes.length}
               </p>
             </div>
+
+            <button
+              type="button"
+              onClick={handleGenerateMonthlyReport}
+              disabled={fabCodes.length === 0}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-lg
+                bg-blue-600
+                text-white
+                hover:bg-blue-700
+                disabled:bg-gray-300
+                disabled:cursor-not-allowed
+                transition"
+            >
+              Generate Monthly Report
+            </button>
+            <button
+              type="button"
+              onClick={handleClearAllData}
+              disabled={fabCodes.length === 0}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-lg
+      bg-red-600
+      text-white
+      hover:bg-red-700
+      disabled:bg-gray-300
+      disabled:cursor-not-allowed
+      transition"
+            >
+              Clear All Data
+            </button>
           </div>
         </div>
 
-        {/* Responsive table */}
-
-        <div className="overflow-x-auto">
+        <div className="max-h-[500px] overflow-auto">
           <table className="w-full min-w-[650px]">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                   Name
@@ -380,10 +464,10 @@ export default function FabCodeManager() {
                           type="button"
                           onClick={() => handleEdit(fabCode)}
                           className="px-3 py-1.5 rounded-md
-                            bg-blue-100
-                            text-blue-700
-                            hover:bg-blue-200
-                            transition"
+                              bg-blue-100
+                              text-blue-700
+                              hover:bg-blue-200
+                              transition"
                         >
                           Edit
                         </button>
@@ -392,10 +476,10 @@ export default function FabCodeManager() {
                           type="button"
                           onClick={() => handleDelete(fabCode.id)}
                           className="px-3 py-1.5 rounded-md
-                            bg-red-100
-                            text-red-700
-                            hover:bg-red-200
-                            transition"
+                              bg-red-100
+                              text-red-700
+                              hover:bg-red-200
+                              transition"
                         >
                           Delete
                         </button>
@@ -408,6 +492,112 @@ export default function FabCodeManager() {
           </table>
         </div>
       </div>
+
+      {/* ============================
+          MONTHLY REPORT
+      ============================ */}
+
+      {showMonthlyReport && (
+        <div className="mt-6 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          {/* Report Header */}
+
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+                  Monthly Report
+                </h2>
+
+                <p className="text-sm text-gray-500 mt-1">
+                  Total FAB codes: {monthlyReport.length}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={hideMonthlyReport}
+                className="w-full sm:w-auto px-4 py-2 rounded-lg
+                  border border-gray-300
+                  text-gray-700
+                  hover:bg-gray-50
+                  transition"
+              >
+                Close Report
+              </button>
+            </div>
+          </div>
+
+          {/* Report Table */}
+
+          <div className="max-h-[500px] overflow-auto">
+            <table className="w-full min-w-[650px]">
+              <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Name
+                  </th>
+
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                    Total Defects
+                  </th>
+
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                    Total Yards
+                  </th>
+
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                    Result %
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-gray-100">
+                {monthlyReport.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-4 py-10 text-center text-gray-500"
+                    >
+                      No monthly report data.
+                    </td>
+                  </tr>
+                ) : (
+                  monthlyReport.map((item, index) => (
+                    <tr
+                      key={`${item.name}-${index}`}
+                      className="hover:bg-gray-50 transition"
+                    >
+                      {/* Name */}
+
+                      <td className="px-4 py-3 text-sm font-medium text-gray-800">
+                        {item.name}
+                      </td>
+
+                      {/* Total Defects */}
+
+                      <td className="px-4 py-3 text-sm text-right text-gray-600">
+                        {item.totalDefects}
+                      </td>
+
+                      {/* Total Yards */}
+
+                      <td className="px-4 py-3 text-sm text-right text-gray-600">
+                        {item.totalYards.toFixed(2)}
+                      </td>
+
+                      {/* Result */}
+
+                      <td className="px-4 py-3 text-sm text-center font-semibold text-green-500">
+                        {item.result}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
