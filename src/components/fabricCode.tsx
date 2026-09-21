@@ -415,15 +415,18 @@ export default function FabCodeManager() {
           <table className="w-full min-w-[650px]">
             <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                  No.
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
                   Name
                 </th>
 
-                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
                   Defects
                 </th>
 
-                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
                   Yards
                 </th>
 
@@ -444,17 +447,20 @@ export default function FabCodeManager() {
                   </td>
                 </tr>
               ) : (
-                fabCodes.map((fabCode) => (
+                fabCodes.map((fabCode, index) => (
                   <tr key={fabCode.id} className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-3 text-sm font-medium text-gray-800">
+                    <td className="px-4 py-3 text-sm text-center text-gray-600">
+                      {index + 1}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center font-medium text-gray-800">
                       {fabCode.name}
                     </td>
 
-                    <td className="px-4 py-3 text-sm text-right text-gray-600">
+                    <td className="px-4 py-3 text-sm text-center text-gray-600">
                       {fabCode.defects}
                     </td>
 
-                    <td className="px-4 py-3 text-sm text-right text-gray-600">
+                    <td className="px-4 py-3 text-sm text-center text-gray-600">
                       {fabCode.yards}
                     </td>
 
@@ -533,15 +539,18 @@ export default function FabCodeManager() {
             <table className="w-full min-w-[650px]">
               <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                    No.
+                  </th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
                     Name
                   </th>
 
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
                     Total Defects
                   </th>
 
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
                     Total Yards
                   </th>
 
@@ -567,21 +576,24 @@ export default function FabCodeManager() {
                       key={`${item.name}-${index}`}
                       className="hover:bg-gray-50 transition"
                     >
+                      <td className="px-4 py-3 text-sm text-center text-gray-600">
+                        {index + 1}
+                      </td>
                       {/* Name */}
 
-                      <td className="px-4 py-3 text-sm font-medium text-gray-800">
+                      <td className="px-4 py-3 text-sm text-center font-medium text-gray-800">
                         {item.name}
                       </td>
 
                       {/* Total Defects */}
 
-                      <td className="px-4 py-3 text-sm text-right text-gray-600">
+                      <td className="px-4 py-3 text-sm text-center text-gray-600">
                         {item.totalDefects}
                       </td>
 
                       {/* Total Yards */}
 
-                      <td className="px-4 py-3 text-sm text-right text-gray-600">
+                      <td className="px-4 py-3 text-sm text-center text-gray-600">
                         {item.totalYards.toFixed(2)}
                       </td>
 
