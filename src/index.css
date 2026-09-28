@@ -110,3 +110,8 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+.download-icon {
+      height:70px;
+      color: #212121; /* Icon color */
+    }
