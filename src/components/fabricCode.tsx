@@ -329,10 +329,11 @@ export default function FabCodeManager() {
           "DATE",
           "FABRIC CODE/COLOR",
           "TOTAL YARDS INSPECTED QTY.",
-          "TTL. DEFECT QTY.",
+          "TTL.DEFECT QTY.",
         ];
 
         const headerRow = worksheet.getRow(1);
+        console.log("🚀 ~ handleFileUpload ~ headerRow:", headerRow);
 
         const colIndexMap: Record<string, number> = {};
 
@@ -340,35 +341,43 @@ export default function FabCodeManager() {
           const rawHeader = extractCellValue(cell.value);
 
           const headerName = String(rawHeader).trim().toUpperCase();
+          console.log("🚀 ~ handleFileUpload ~ headerName:", headerName);
 
-          if (headerName === "DATE") {
+          if (headerName == "DATE") {
             colIndexMap["DATE"] = colNumber;
           }
 
           const normalizedHeader = headerName.replace(/\s+/g, "");
+          console.log(
+            "🚀 ~ handleFileUpload ~ normalizedHeader:",
+            normalizedHeader,
+          );
 
           if (
             normalizedHeader.includes("FABRICCODE") ||
-            normalizedHeader.includes("COLORCODE")
+            normalizedHeader.includes("COLOR/CODE")
           ) {
             colIndexMap["FABRIC CODE/COLOR"] = colNumber;
           }
 
-          if (normalizedHeader.includes("TOTALYARDSINSPECTEDQTY")) {
+          if (normalizedHeader.includes("TOTALYARDSINSPECTEDQTY.")) {
             colIndexMap["TOTAL YARDS INSPECTED QTY."] = colNumber;
           }
 
           if (
-            normalizedHeader.includes("TTL.DEFECTQTY") ||
-            normalizedHeader.includes("TOTALDEFECTQTY")
+            normalizedHeader.includes("TTL.DEFECTQTY.") ||
+            normalizedHeader.includes("TOTALDEFECTQTY.")
           ) {
-            colIndexMap["TTL. DEFECT QTY."] = colNumber;
+            colIndexMap["TTL.DEFECT QTY."] = colNumber;
           }
         });
 
         const missingHeaders = expectedHeaders.filter(
           (header) => !colIndexMap[header],
         );
+        console.log("🚀 ~ handleFileUpload ~ colIndexMap:", colIndexMap);
+
+        console.log("🚀 ~ handleFileUpload ~ missingHeaders:", missingHeaders);
 
         if (missingHeaders.length > 0) {
           setValidationError(
@@ -380,6 +389,7 @@ export default function FabCodeManager() {
 
         const totalRows = worksheet.rowCount;
         const parsedRows: DynamicRow[] = [];
+        console.log("🚀 ~ handleFileUpload ~ parsedRows:", parsedRows);
         const CHUNK_SIZE = 500;
 
         for (let rowNumber = 2; rowNumber <= totalRows; rowNumber++) {
@@ -406,8 +416,9 @@ export default function FabCodeManager() {
           }
 
           const rowMonth = parsedDate.getMonth() + 1;
+          const rowYear = parsedDate.getFullYear();
 
-          if (rowMonth !== selectedMonth) {
+          if (rowMonth !== 9 || rowYear !== 2026) {
             continue;
           }
 
@@ -425,7 +436,7 @@ export default function FabCodeManager() {
           );
 
           const defectQtyValue = extractCellValue(
-            row.getCell(colIndexMap["TTL. DEFECT QTY."]).value,
+            row.getCell(colIndexMap["TTL.DEFECT QTY."]).value,
           );
 
           parsedRows.push({
@@ -442,11 +453,12 @@ export default function FabCodeManager() {
             await yieldToMain();
           }
         }
+        console.log("🚀 ~ handleFileUpload ~ parsedRows:", parsedRows);
 
         addFabCode([...parsedRows] as any);
 
         setStatusText(
-          `Successfully loaded ${parsedRows.length} rows for the selected month.`,
+          `Successfully loaded ${parsedRows.length} rows for September 2026.`,
         );
       });
     } catch (err) {
