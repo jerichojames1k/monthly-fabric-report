@@ -5,6 +5,7 @@ import React, { useTransition } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { format, parse, isValid } from "date-fns";
+import { parseNumericCellValue } from "../utils/parseNumericCellValue";
 type DynamicRow = Record<string, any>;
 
 interface FormData {
@@ -443,8 +444,8 @@ export default function FabCodeManager() {
             id: crypto.randomUUID(),
             date: format(parsedDate, "yyyy-MM-dd"),
             name: fabricCodeOnly,
-            yards: Number(totalYardsValue || 0),
-            defects: Number(defectQtyValue || 0),
+            yards: Number(parseNumericCellValue(totalYardsValue) || 0),
+            defects: Number(parseNumericCellValue(defectQtyValue) || 0),
           });
 
           if (rowNumber % CHUNK_SIZE === 0) {
